@@ -79,12 +79,16 @@ function resImg(el) {
 	obj.changeUrl = function(el,url) {
 		var nextImg = el.nextElementSibling;
 		if(nextImg.getAttribute('src') !== url) {
-			var img = new Image();
-			img.addEventListener('load', function() {
-				nextImg.setAttribute('src',url);
-				if(!el.parentNode.classList.contains('loaded')) el.parentNode.classList.add('loaded');
-			}, false);
-			img.src = url;
+            if(!el.parentNode.classList.contains('loading')) {
+                var img = new Image();
+                el.parentNode.classList.add('loading');
+                img.addEventListener('load', function() {
+                    nextImg.setAttribute('src',url);
+                    el.parentNode.classList.remove('loading');
+					if(!el.parentNode.classList.contains('loaded')) el.parentNode.classList.add('loaded');
+                }, false);
+                img.src = url;
+            }
 		}
 	};
 	obj.windowScroll = function() {
