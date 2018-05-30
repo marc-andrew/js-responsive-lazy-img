@@ -1,0 +1,113 @@
+/*!
+	JS Responsive lazy load image script.
+	Version 1.0.0
+	Full source at https://github.com/marc-andrew/js-responsive-lazy-img
+	MIT License (http://www.opensource.org/licenses/mit-license.html)
+*/
+
+function resImg(el) {
+	var obj = this,
+		windowSizeObj = new Object();
+	
+	obj.id = el;
+	obj.init = function() {
+		obj.windowSize();
+		obj.imgData();
+		obj.windowScroll();
+		obj.windowResize();
+	};
+	obj.imgData = function() {
+		for(var key in obj.id) {
+			if(!obj.id.hasOwnProperty(key)) continue;
+			var thisEl = obj.id[key],
+				dataLazy = thisEl.getAttribute('data-lazy');
+
+			if(dataLazy !== 'true' || thisEl.parentNode.classList.contains('loaded')) {
+				obj.changeUrl(thisEl,obj.bpImg(thisEl));
+			} else {
+				obj.inView(thisEl);
+			}
+		}
+	};
+	obj.bpImg = function(el) {
+		var bpArr = ['0'], urlArr = [];
+
+		var bp = el.getAttribute('data-srcset').match(/\s([0-9]+)w/g), // match string against regex, and returns the matches, as an array
+			bpURL = el.getAttribute('data-srcset').match(/([a-zA-Z0-9/?$.:_-]+)\s/g); // match string against regex, and returns the matches, as an array
+		
+		urlArr.push(el.getAttribute('data-src'));
+		bp.forEach(function(item, index) {
+			var bpItem = item.substring(1, item.length - 1);
+			bpArr.push(bpItem);
+			urlArr.push(bpURL[index].substring(0, bpURL[index].length - 1));
+		});
+		return urlArr[obj.getBp(windowSizeObj.winW,bpArr)];
+	};
+	obj.windowSize = function() {
+		// console.log('\n\n🚀 windowSize called ----------------------------');
+
+		var winW = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
+			winH = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+
+		windowSizeObj['winW'] = winW;
+		windowSizeObj['winH'] = winH;
+	};
+	obj.inView = function(el) {
+		var elObj = el.nextElementSibling.getBoundingClientRect(),
+			topPos = elObj.top,
+			elHeight = elObj.height,
+			threshold = 50,
+			lazyWin = windowSizeObj.winH + threshold;
+		
+		if (topPos >= 0) {
+			if (topPos <= lazyWin) obj.changeUrl(el,obj.bpImg(el));
+		} else {
+			var elInView = topPos + elHeight + threshold;
+			if (elInView >= 0) obj.changeUrl(el,obj.bpImg(el));
+		}
+	};
+	obj.getBp = function(vp, arr) {
+		var arrLength = arr.length;
+		for (var i = arrLength; i > 0; i--) {
+			if (vp >= parseInt(arr[i - 1])) {
+				return parseInt(i - 1);
+			} else if (vp < arr[0]) {
+				return 0;
+			}
+		}
+	};
+	obj.changeUrl = function(el,url) {
+		var nextImg = el.nextElementSibling;
+		if(nextImg.getAttribute('src') !== url) {
+			var img = new Image();
+			img.addEventListener('load', function() {
+				nextImg.setAttribute('src',url);
+				if(!el.parentNode.classList.contains('loaded')) el.parentNode.classList.add('loaded');
+			}, false);
+			img.src = url;
+		}
+	};
+	obj.windowScroll = function() {
+		window.addEventListener('scroll', function(e) {
+			obj.imgData();
+		});
+	};
+	obj.windowResize = function() {
+		var timeOut;
+
+		window.onresize = function () {
+			clearTimeout(timeOut);
+			timeOut = setTimeout(run, 100);
+		};
+
+		function run() {
+			obj.windowSize();
+			obj.imgData();
+		}
+	};
+}
+
+var imgSrc = document.getElementsByClassName('res-data');
+var responsiveImg = new resImg(imgSrc);
+
+responsiveImg.init();
