@@ -44,8 +44,6 @@ function resImg(el) {
 		return urlArr[obj.getBp(windowSizeObj.winW,bpArr)];
 	};
 	obj.windowSize = function() {
-		// console.log('\n\n🚀 windowSize called ----------------------------');
-
 		var winW = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
 			winH = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 
