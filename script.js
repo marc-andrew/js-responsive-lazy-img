@@ -1,13 +1,6 @@
-/*!
-	JS Responsive lazy load image script.
-	Version 1.0.0
-	Full source at https://github.com/marc-andrew/js-responsive-lazy-img
-	MIT License (http://www.opensource.org/licenses/mit-license.html)
-*/
-
 function resImg(el) {
 	var obj = this,
-		windowSizeObj = new Object();
+		windowSizeObj = {};
 	
 	obj.id = el;
 	obj.init = function() {
@@ -17,10 +10,9 @@ function resImg(el) {
 		obj.windowResize();
 	};
 	obj.imgData = function() {
-		for(var key in obj.id) {
-			if(!obj.id.hasOwnProperty(key)) continue;
-			var thisEl = obj.id[key],
-				dataLazy = thisEl.getAttribute('data-lazy');
+		for(var i = 0; i < obj.id.length; i++) {
+			var thisEl = obj.id[i],
+			dataLazy = thisEl.getAttribute('data-lazy');
 
 			if(dataLazy !== 'true' || thisEl.parentNode.classList.contains('loaded')) {
 				obj.changeUrl(thisEl,obj.bpImg(thisEl));
@@ -30,25 +22,17 @@ function resImg(el) {
 		}
 	};
 	obj.bpImg = function(el) {
-		var bpArr = ['0'], urlArr = [];
+		var bp = el.getAttribute('data-srcset').match(/\s([0-9]+)w/g).join().replace(/\s/g,'').split(','),
+			bpURL = el.getAttribute('data-srcset').match(/([a-zA-Z0-9/?$.:_-]+)\s/g).join().replace(/\s/g,'').split(',');
 
-		var bp = el.getAttribute('data-srcset').match(/\s([0-9]+)w/g), // match string against regex, and returns the matches, as an array
-			bpURL = el.getAttribute('data-srcset').match(/([a-zA-Z0-9/?$.:_-]+)\s/g); // match string against regex, and returns the matches, as an array
-		
-		urlArr.push(el.getAttribute('data-src'));
-		bp.forEach(function(item, index) {
-			var bpItem = item.substring(1, item.length - 1);
-			bpArr.push(bpItem);
-			urlArr.push(bpURL[index].substring(0, bpURL[index].length - 1));
-		});
-		return urlArr[obj.getBp(windowSizeObj.winW,bpArr)];
+		return bpURL[obj.getBp(windowSizeObj.winW,bp)];
 	};
 	obj.windowSize = function() {
 		var winW = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
 			winH = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
 
-		windowSizeObj['winW'] = winW;
-		windowSizeObj['winH'] = winH;
+		windowSizeObj.winW = winW;
+		windowSizeObj.winH = winH;
 	};
 	obj.inView = function(el) {
 		var elObj = el.nextElementSibling.getBoundingClientRect(),
@@ -77,16 +61,16 @@ function resImg(el) {
 	obj.changeUrl = function(el,url) {
 		var nextImg = el.nextElementSibling;
 		if(nextImg.getAttribute('src') !== url) {
-            if(!el.parentNode.classList.contains('loading')) {
-                var img = new Image();
-                el.parentNode.classList.add('loading');
-                img.addEventListener('load', function() {
-                    nextImg.setAttribute('src',url);
-                    el.parentNode.classList.remove('loading');
+			if(!el.parentNode.classList.contains('loading')) {
+				el.parentNode.classList.add('loading');
+				var img = new Image();
+				img.addEventListener('load', function() {
+					nextImg.setAttribute('src',url);
+					el.parentNode.classList.remove('loading');
 					if(!el.parentNode.classList.contains('loaded')) el.parentNode.classList.add('loaded');
-                }, false);
-                img.src = url;
-            }
+				}, false);
+				img.src = url;
+			}
 		}
 	};
 	obj.windowScroll = function() {
@@ -96,7 +80,6 @@ function resImg(el) {
 	};
 	obj.windowResize = function() {
 		var timeOut;
-
 		window.onresize = function () {
 			clearTimeout(timeOut);
 			timeOut = setTimeout(run, 100);
@@ -111,5 +94,4 @@ function resImg(el) {
 
 var imgSrc = document.getElementsByClassName('res-data');
 var responsiveImg = new resImg(imgSrc);
-
 responsiveImg.init();
